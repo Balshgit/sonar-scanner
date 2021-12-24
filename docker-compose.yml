@@ -6,7 +6,6 @@ volumes:
   sonarqube_logs:
   pg_db:
   pg_data:
-  elastic:
 
 networks:
   sonarnet:
@@ -65,4 +64,4 @@ services:
     networks:
       - sonarnet
     volumes:
-      - ./:/usr/src
+      - ./code:/usr/src
