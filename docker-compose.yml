@@ -1,0 +1,68 @@
+version: "3"
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  pg_db:
+  pg_data:
+  elastic:
+
+networks:
+  sonarnet:
+
+services:
+  sonarqube:
+    image: sonarqube:9.2.4-community
+    container_name: sonarqube
+    hostname: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - sonar.jdbc.username=sonar
+      - sonar.jdbc.password=sonar
+      - sonar.search.javaAdditionalOpts=-Dbootstrap.system_call_filter=false
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - ./logs:/opt/sonarqube/logs
+    networks:
+      - sonarnet
+
+  sonar_db:
+    image: postgres:12.9
+    container_name: sonar_db
+    hostname: db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+    volumes:
+      - pg_db:/var/lib/postgresql
+      - pg_data:/var/lib/postgresql/data
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - sonarnet
+
+  sonar_scanner:
+    image: "sonar-scanner"
+    container_name: sonar_scanner
+    build:
+      context: .
+      dockerfile: Dockerfile.sonarscanner
+    restart: on-failure
+    command: >
+      bash -c "echo 'start sleeping 30 sec' && sleep 30
+      && echo 'Changing default passwords on sonar webpage'
+      && curl -u admin:admin -X POST 'http://sonarqube:9000/api/users/change_password?login=admin&previousPassword=admin&password=password'
+      && echo 'start sleeping 3 sec' && sleep 3
+      && sonar-scanner -Dsonar.projectBaseDir=/usr/src"
+    depends_on:
+      - sonarqube
+      - sonar_db
+    networks:
+      - sonarnet
+    volumes:
+      - ./:/usr/src
