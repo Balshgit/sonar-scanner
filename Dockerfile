@@ -1,4 +1,4 @@
-FROM openjdk:12-jdk-alpine
+FROM openjdk:19-alpine
 
 # BEGIN alpine-specific
 RUN apk add --no-cache curl grep sed unzip bash nano
@@ -23,8 +23,7 @@ ENV TZ=Europe/Moscow
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /usr/src
-
-ARG SCANNER_VERSION=4.5.0.2216
+ARG SCANNER_VERSION=5.0.1.3006
 ENV SCANNER_FILE=sonar-scanner-cli-${SCANNER_VERSION}-linux.zip
 ENV SCANNER_EXPANDED_DIR=sonar-scanner-${SCANNER_VERSION}-linux
 RUN curl --insecure -o ${SCANNER_FILE} \
